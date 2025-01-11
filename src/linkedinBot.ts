@@ -102,36 +102,6 @@ export class LinkedInBot {
         }
     }
 
-    private async login() {
-        if (!this.page) throw new Error('Browser not initialized');
-
-        try {
-            await this.page.waitForSelector('#username');
-
-            // Enter credentials
-            await this.page.type('#username', CONFIG.LINKEDIN_EMAIL, {delay: 200});
-            await this.page.type('#password', CONFIG.LINKEDIN_PASSWORD, {delay: 200});
-
-            // Click sign in
-            await this.page.click('[type="submit"]');
-
-            // Wait for navigation after login
-            await this.page.waitForNavigation();
-
-            // Verify login success
-            const profileButton = await this.page.waitForSelector(
-                '[data-control-name="nav.settings_view_profile"]',
-                {timeout: 5000},
-            );
-            if (!profileButton) throw new Error('Login failed');
-
-            logger.log('Successfully logged in to LinkedIn');
-        } catch (error) {
-            logger.error('Login failed:', error);
-            throw error;
-        }
-    }
-
     async close() {
         if (this.browser) {
             await this.browser.close();
@@ -267,11 +237,11 @@ export class LinkedInBot {
             throw new Error('Browser not initialized');
         }
 
-        await delay(200, 'escape 1');
+        await delay(120, 'escape 1');
         await this.page.keyboard.press('Escape');
-        await delay(200, 'escape 2');
+        await delay(120, 'escape 2');
         await this.page.keyboard.press('Escape');
-        await delay(200, 'escape 3');
+        await delay(120, 'escape 3');
         await this.page.keyboard.press('Escape');
     }
 
@@ -341,6 +311,73 @@ export class LinkedInBot {
         return undefined;
     }
 
+    async removeOldInvites(page = 1) {
+        logger.log("Running deletion:. Page: ", page);
+
+        if (!this.page) throw new Error('Browser not initialized');
+
+        try {
+            const searchUrl = 'https://www.linkedin.com/mynetwork/invitation-manager/sent/?';
+
+            const params = new URLSearchParams();
+            params.append('page', page.toString());
+            await this.page.goto(`${searchUrl}${params.toString()}`);
+            await delay(3000, 'before reading list');
+
+            const resultContainer = await this.page.waitForSelector('.mn-invitation-list');
+
+            const url = this.page.url();
+            if (page !== 1 && !url.includes('page=')) {
+                return;
+            }
+
+            const list = (await resultContainer?.$$('li.invitation-card')) || [];
+
+            logger.log('length', list.length);
+
+            for (let i = list.length - 1; i >= 0; i--) {
+                const li = list[i];
+                await this.pressEsc();
+                await delay(100, 'cycle for list');
+                const timeBadgeContainer = await li.$('span.time-badge');
+                const timeBadgeText = await timeBadgeContainer?.evaluate((elem) => elem.innerText);
+                logger.log('timeBadgeText', timeBadgeText);
+                
+                if (timeBadgeText && timeBadgeText.includes('мес. назад')) {
+                    await this.deleteOldInviteFlow(li);
+                    logger.log(timeBadgeText);
+                }
+            }
+
+            // logger.log('People search completed successfully');
+            await this.removeOldInvites(page + 1);
+            this.saveStatus({status: 'stopped'});
+        } catch (error) {
+            logger.error('People search failed:', error);
+            throw error;
+        }
+    }
+
+    private async deleteOldInviteFlow(card: ElementHandle<HTMLLIElement>) {
+        if (!this.page || !card) {
+            throw new Error('Browser not initialized');
+        }
+
+        const button = await card.waitForSelector('button.invitation-card__action-btn');
+        if (button) {
+            await delay(2000, 'before reject invitation');
+            await button.click();
+
+            await delay(5000, 'before reject invitation');
+
+            const modal = await this.page.waitForSelector('div.artdeco-modal');
+            const confirmButton = await modal?.waitForSelector('button.artdeco-button--primary');
+            await delay(1000, 'before reject invitation');
+
+            await confirmButton?.click();
+        }
+    }
+
     private getPropertyKey() {
         const {keywords, network, location} = CONFIG.SEARCH_CRITERIA;
         return [
@@ -348,5 +385,31 @@ export class LinkedInBot {
             network.join(','),
             location.join(','),
         ].join('_');
+    }
+
+    private async login() {
+        if (!this.page) throw new Error('Browser not initialized');
+
+        try {
+            await this.page.waitForSelector('#username');
+
+            await this.page.type('#username', CONFIG.LINKEDIN_EMAIL, {delay: 200});
+            await this.page.type('#password', CONFIG.LINKEDIN_PASSWORD, {delay: 200});
+
+            await this.page.click('[type="submit"]');
+
+            await this.page.waitForNavigation();
+
+            const profileButton = await this.page.waitForSelector(
+                '[data-control-name="nav.settings_view_profile"]',
+                {timeout: 5000},
+            );
+            if (!profileButton) throw new Error('Login failed');
+
+            logger.log('Successfully logged in to LinkedIn');
+        } catch (error) {
+            logger.error('Login failed:', error);
+            throw error;
+        }
     }
 }
