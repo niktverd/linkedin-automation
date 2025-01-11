@@ -1,0 +1,44 @@
+{
+  "name": "linkedin-puppeteer",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint:js": "eslint --ext .js,.jsx,.ts,.tsx .",
+    "lint:js:fix": "npm run lint:js -- --fix",
+    "lint:prettier": "cross-env prettier --check '**/*.{ts,js,jsx,json,md,yaml}'",
+    "lint:prettier:fix": "cross-env prettier --write '**/*.{ts,js,jsx,json,md,yaml}'",
+    "lint": "run-p lint:*",
+    "typecheck": "tsc --noEmit",
+    "start": "tsx src/index.ts",
+    "start:headfull": "HEADFULL=true tsx src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "node-cron": "^3.0.3",
+    "puppeteer": "^23.11.1",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  },
+  "devDependencies": {
+    "@gravity-ui/eslint-config": "^3.1.1",
+    "@gravity-ui/prettier-config": "^1.1.0",
+    "@gravity-ui/tsconfig": "^1.0.0",
+    "@types/node": "^22.10.5",
+    "@types/node-cron": "^3.0.11",
+    "@types/puppeteer": "^5.4.7",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.56.0",
+    "eslint-import-resolver-typescript": "^3.7.0",
+    "eslint-plugin-testing-library": "^7.1.1",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.2.4",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "type": "module"
+}

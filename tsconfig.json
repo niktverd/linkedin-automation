@@ -1,0 +1,24 @@
+{
+  "extends": "@gravity-ui/tsconfig",
+  "compilerOptions": {
+    "allowJs": true,
+    "outDir": "build/esm",
+    "module": "ESNext",
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "resolveJsonModule": true,
+    "importHelpers": true,
+    "verbatimModuleSyntax": true,
+    "paths": {
+      "~playwright/*": ["playwright/*"],
+    },
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "target": "ESNext",
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "test-utils/*"],
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node",
+  },
+}
