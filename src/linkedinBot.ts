@@ -55,6 +55,8 @@ export class LinkedInBot {
             fs.mkdirSync(this.userDataDir, {recursive: true});
         }
 
+        this.setLocation();
+
         const params = this.getParameters();
 
         const {status} = this.getStatus() || {};
@@ -131,7 +133,8 @@ export class LinkedInBot {
             if (searchParams.location) {
                 // LinkedIn uses geoUrn for location filtering
                 // Note: You might need to maintain a mapping of locations to their URNs
-                params.append('geoUrn', `["${searchParams.location.join('","')}"]`);
+                const location = this.getLocation();
+                params.append('geoUrn', `["${location.join('","')}"]`);
             }
 
             if (searchParams.network) {
@@ -191,6 +194,7 @@ export class LinkedInBot {
 
             logger.log('People search completed successfully');
             this.saveStatus({status: 'stopped'});
+            this.setLocation();
         } catch (error) {
             this.saveParameters({page: page, error: true, parameters: this.getParameters()});
             logger.error('People search failed:', error);
@@ -379,7 +383,8 @@ export class LinkedInBot {
     }
 
     private getPropertyKey() {
-        const {keywords, network, location} = CONFIG.SEARCH_CRITERIA;
+        const {keywords, network} = CONFIG.SEARCH_CRITERIA;
+        const location = this.getLocation();
         return [
             keywords,
             network.join(','),
@@ -410,6 +415,23 @@ export class LinkedInBot {
         } catch (error) {
             logger.error('Login failed:', error);
             throw error;
+        }
+    }
+
+    private setLocation() {
+        const location = CONFIG.SEARCH_CRITERIA.location.filter(() => Math.random() > 0.8)
+        const configPath = path.join(process.cwd(), 'browser_data', 'config.location.json');
+        writeFileSync(configPath, JSON.stringify(location, null, 3), 'utf-8');
+    }
+
+    private getLocation() {
+        try {
+            const configPath = path.join(process.cwd(), 'browser_data', 'config.location.json');
+            const dataText = readFileSync(configPath, 'utf-8');
+            return JSON.parse(dataText);
+        } catch (error) {
+            logger.error(error);
+            return CONFIG.SEARCH_CRITERIA.location[0];
         }
     }
 }

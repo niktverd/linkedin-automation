@@ -4,6 +4,7 @@ import { removeOldInvitations, search } from './indexFunctions';
 import { logger } from './utils';
 
 dotenv.config();
+search(true);
 cron.schedule('*/5 * * * *', () => {
     logger.log('Running bot task...');
     search();
