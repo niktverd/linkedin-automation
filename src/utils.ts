@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
 export const delay = (ms: number, comment?: string): Promise<void> => {
     console.log('Delay for:', ms, comment);
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -9,5 +11,5 @@ export const logger = {
     },
     error: (...args: any) => {
         console.error(new Date().toLocaleString(), ...args);
-    }
+    },
 };

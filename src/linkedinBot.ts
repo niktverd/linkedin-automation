@@ -1,25 +1,25 @@
-import fs, { readFileSync, writeFileSync } from 'fs';
+import fs, {readFileSync, writeFileSync} from 'fs';
 import path from 'path';
 
 import type {Browser, ElementHandle, Page} from 'puppeteer';
 import puppeteer from 'puppeteer-extra';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import stealthPlugin from 'puppeteer-extra-plugin-stealth';
 
 import {CONFIG} from './config';
+import type {Parameters} from './types';
 import {delay, logger} from './utils';
-import type { Parameters } from './types';
 
 // Add stealth plugin
-puppeteer.use(StealthPlugin());
+puppeteer.use(stealthPlugin());
 type SaveArgs = {
     parameters: Parameters;
     error: boolean;
     page: number;
-}
+};
 
 type StatusArgs = {
     status: 'running' | 'stopped';
-}
+};
 
 export class LinkedInBot {
     private browser: Browser | null = null;
@@ -66,9 +66,9 @@ export class LinkedInBot {
                 error: true,
                 page: params.page,
                 parameters: params,
-            })
-            
-            throw new Error('Another process in progress'); 
+            });
+
+            throw new Error('Another process in progress');
         }
 
         this.saveStatus({status: 'running'});
@@ -113,7 +113,7 @@ export class LinkedInBot {
     }
 
     async searchPeople(page = 1) {
-        logger.log("Running with page:", page);
+        logger.log('Running with page:', page);
 
         const searchParams = CONFIG.SEARCH_CRITERIA;
 
@@ -166,6 +166,7 @@ export class LinkedInBot {
 
                 for (const b of buttons) {
                     const innerText = await b.evaluate((elem) => {
+                        // eslint-disable-next-line no-console
                         console.log(elem);
                         return elem.innerText;
                     });
@@ -188,7 +189,11 @@ export class LinkedInBot {
             logger.log('List is completed. Amout of sent invitation: ', this.sentInvites);
             if (list.length && this.sentInvites < this.invitesGoal) {
                 logger.log('Run with page: ', page + 1);
-                this.saveParameters({page: page + 1, error: false, parameters: this.getParameters()});
+                this.saveParameters({
+                    page: page + 1,
+                    error: false,
+                    parameters: this.getParameters(),
+                });
                 await this.searchPeople(page + 1);
             }
 
@@ -213,19 +218,22 @@ export class LinkedInBot {
         if (container) {
             await delay(1000, 'loading invite container');
 
-            const emailInput = await this.page.waitForSelector('input[name="email"]', { 
-                timeout: 1000 
-            }).catch(() => null);
-    
+            const emailInput = await this.page
+                .waitForSelector('input[name="email"]', {
+                    timeout: 1000,
+                })
+                .catch(() => null);
+
             // If email input exists, skip this invitation
             if (emailInput) {
                 await this.pressEsc();
                 return;
             }
-            
+
             const withoutPersonalizationButton = await this.page.waitForSelector(
                 'button.artdeco-button--primary',
             );
+            // eslint-disable-next-line no-console
             await withoutPersonalizationButton?.evaluate((element) => console.log(element));
             await delay(3000, 'before send invite');
             if (withoutPersonalizationButton) {
@@ -256,7 +264,7 @@ export class LinkedInBot {
             const configPath = path.join(process.cwd(), 'browser_data', 'config.data.json');
             const textData = readFileSync(configPath, 'utf-8');
             parameters = JSON.parse(textData);
-            
+
             return {
                 runsWithError: parameters.runsWithError || 0,
                 page: parameters[this.getPropertyKey()] || 1,
@@ -286,7 +294,8 @@ export class LinkedInBot {
             const configPath = path.join(process.cwd(), 'browser_data', 'config.data.json');
             writeFileSync(configPath, JSON.stringify(data, null, 3), 'utf-8');
             return data;
-        } catch (error) {
+            // eslint-disable-next-line @typescript-eslint/no-shadow
+        } catch (error: unknown) {
             logger.log(error);
         }
         return parameters;
@@ -316,7 +325,7 @@ export class LinkedInBot {
     }
 
     async removeOldInvites(page = 1) {
-        logger.log("Running deletion:. Page: ", page);
+        logger.log('Running deletion:. Page: ', page);
 
         if (!this.page) throw new Error('Browser not initialized');
 
@@ -346,7 +355,7 @@ export class LinkedInBot {
                 const timeBadgeContainer = await li.$('span.time-badge');
                 const timeBadgeText = await timeBadgeContainer?.evaluate((elem) => elem.innerText);
                 logger.log('timeBadgeText', timeBadgeText);
-                
+
                 if (timeBadgeText && timeBadgeText.includes('мес. назад')) {
                     await this.deleteOldInviteFlow(li);
                     logger.log(timeBadgeText);
@@ -385,11 +394,7 @@ export class LinkedInBot {
     private getPropertyKey() {
         const {keywords, network} = CONFIG.SEARCH_CRITERIA;
         const location = this.getLocation();
-        return [
-            keywords,
-            network.join(','),
-            location.join(','),
-        ].join('_');
+        return [keywords, network.join(','), location.join(',')].join('_');
     }
 
     private async login() {
@@ -419,7 +424,7 @@ export class LinkedInBot {
     }
 
     private setLocation() {
-        const location = CONFIG.SEARCH_CRITERIA.location.filter(() => Math.random() > 0.8)
+        const location = CONFIG.SEARCH_CRITERIA.location.filter(() => Math.random() > 0.8);
         const configPath = path.join(process.cwd(), 'browser_data', 'config.location.json');
         writeFileSync(configPath, JSON.stringify(location, null, 3), 'utf-8');
     }
