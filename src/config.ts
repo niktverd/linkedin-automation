@@ -11,7 +11,7 @@ export const CONFIG = {
             // 'O',
             'S',
         ],
-        keywords: 'angel investor',
+        keywords: 'oracle ML',
         location: [
             103644278, // USA
             105015875, // France

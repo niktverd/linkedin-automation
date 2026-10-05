@@ -25,7 +25,7 @@ export class LinkedInBot {
     private browser: Browser | null = null;
     private page: Page | null = null;
     private readonly userDataDir = path.join(process.cwd(), 'browser_data');
-    private invitesGoal = 3;
+    private invitesGoal = 50;
     private sentInvites = 0;
 
     async openEmptyBrowser() {

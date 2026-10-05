@@ -6,7 +6,7 @@ import {logger} from './utils';
 
 dotenv.config();
 search(true);
-cron.schedule('*/5 * * * *', () => {
+cron.schedule('0 */3 * * *', () => {
     logger.log('Running bot task...');
     search();
 });
